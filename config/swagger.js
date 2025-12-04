@@ -290,7 +290,7 @@ API for managing applications to the Design Thinking Challenge 2026 - Africa's p
       },
     },
   },
-  apis: ["./src/routes/*.js", "./src/server.js"],
+  apis: ["./routes/*.js", "./server.js"],
 }
 
 const swaggerSpec = swaggerJsdoc(options)
