@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 5000
 app.use(helmet())
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "*",
+    origin: process.env.FRONTEND_URL_1 || process.env.FRONTEND_URL_2 || process.env.FRONTEND_URL_3 || "*",
     methods: ["GET", "POST", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
