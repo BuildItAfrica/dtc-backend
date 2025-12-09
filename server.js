@@ -9,79 +9,54 @@ const { connectDB } = require("./config/database")
 const swaggerSpec = require("./config/swagger")
 const { errorHandler, notFoundHandler } = require("./middleware/error.middleware")
 
-// Routes
 const applicationRoutes = require("./routes/applications")
+const authRoutes = require("./routes/auth.routes")
 const statsRoutes = require("./routes/stats")
 
 const app = express()
 const PORT = process.env.PORT || 5000
 
-// Middleware
 app.use(helmet())
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL_1 || process.env.FRONTEND_URL_2 || process.env.FRONTEND_URL_3 || "*",
-    methods: ["GET", "POST", "PATCH", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-)
+app.use(cors({
+  origin: ["http://localhost:3000", "http://localhost:3001", "https://www.dtc.com.ng"],
+  credentials: true,
+}))
 app.use(morgan("dev"))
 app.use(express.json())
 
-// Swagger Documentation
-app.use(
-  "/api/docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, {
-    customCss: ".swagger-ui .topbar { display: none }",
-    customSiteTitle: "DTC 2026 API Documentation",
-  }),
-)
+// Swagger UI
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: ".topbar { display: none }",
+  customSiteTitle: "DTC 2026 Admin API",
+  swaggerOptions: { persistAuthorization: true },
+}))
 
-app.get("/api/docs.json", (req, res) => {
-  res.setHeader("Content-Type", "application/json")
-  res.send(swaggerSpec)
-})
-
-// API Routes
+// Routes
 app.use("/api/applications", applicationRoutes)
+app.use("/api/auth", authRoutes)
 app.use("/api/stats", statsRoutes)
 
-/**
- * @swagger
- * /api/health:
- *   get:
- *     summary: Health check endpoint
- *     tags: [Health]
- *     responses:
- *       200:
- *         description: Server is running
- */
+// Health
 app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    status: "ok",
-    timestamp: new Date().toISOString(),
-  })
+  res.json({ success: true, message: "DTC 2026 API is running!" })
 })
 
-// Error Handling
+app.get("/", (req, res) => res.redirect("/api/docs"))
+
 app.use(notFoundHandler)
 app.use(errorHandler)
 
-// Start Server
-const startServer = async () => {
+const start = async () => {
   try {
     await connectDB()
-
     app.listen(PORT, () => {
-      console.log(`DTC Backend API running on http://localhost:${PORT}`)
-      console.log(`Swagger Docs available at http://localhost:${PORT}/api/docs`)
+      console.log(`\nDTC 2026 Backend Running on http://localhost:${PORT}`)
+      console.log(`Swagger: http://localhost:${PORT}/api/docs\n`)
     })
-  } catch (error) {
-    console.error("Failed to start server:", error.message)
+  } catch (err) {
+    console.error("Failed to start:", err)
     process.exit(1)
   }
 }
 
-startServer()
+start()

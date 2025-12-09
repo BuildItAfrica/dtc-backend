@@ -1,6 +1,15 @@
-const express = require("express")
-const router = express.Router()
-const applicationController = require("../controllers/application.controller")
+// routes/applications.js
+const express = require("express");
+const router = express.Router();
+const applicationController = require("../controllers/application.controller");
+const { protect } = require("../middleware/auth");
+
+/**
+ * @swagger
+ * tags:
+ *   name: Applications
+ *   description: Submit and manage DTC 2026 applications
+ */
 
 /**
  * @swagger
@@ -20,9 +29,9 @@ const applicationController = require("../controllers/application.controller")
  *       400:
  *         description: Missing required fields
  *       409:
- *         description: Duplicate application
+ *         description: Email already used
  */
-router.post("/individual", applicationController.createIndividual.bind(applicationController))
+router.post("/individual", applicationController.createIndividual.bind(applicationController));
 
 /**
  * @swagger
@@ -38,20 +47,24 @@ router.post("/individual", applicationController.createIndividual.bind(applicati
  *             $ref: '#/components/schemas/TeamApplication'
  *     responses:
  *       201:
- *         description: Team application submitted successfully
+ *         description: Team application submitted
  *       400:
  *         description: Missing required fields
  *       409:
- *         description: Duplicate team name or lead email
+ *         description: Team name or lead email already exists
  */
-router.post("/team", applicationController.createTeam.bind(applicationController))
+router.post("/team", applicationController.createTeam.bind(applicationController));
+
+
 
 /**
  * @swagger
  * /api/applications:
  *   get:
- *     summary: Get all applications with optional filters
+ *     summary: Get all applications (Admin only)
  *     tags: [Applications]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: type
@@ -81,15 +94,30 @@ router.post("/team", applicationController.createTeam.bind(applicationController
  *     responses:
  *       200:
  *         description: List of applications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 applications:
+ *                   type: array
+ *                   items:
+ *                     oneOf:
+ *                       - $ref: '#/components/schemas/IndividualApplication'
+ *                       - $ref: '#/components/schemas/TeamApplication'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/Pagination'
  */
-router.get("/", applicationController.getAll.bind(applicationController))
+router.get("/", protect, applicationController.getAll.bind(applicationController));
 
 /**
  * @swagger
  * /api/applications/{id}:
  *   get:
- *     summary: Get a single application by ID
+ *     summary: Get application by ID (Admin only)
  *     tags: [Applications]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -100,16 +128,18 @@ router.get("/", applicationController.getAll.bind(applicationController))
  *       200:
  *         description: Application details
  *       404:
- *         description: Application not found
+ *         description: Not found
  */
-router.get("/:id", applicationController.getById.bind(applicationController))
+router.get("/:id", protect, applicationController.getById.bind(applicationController));
 
 /**
  * @swagger
  * /api/applications/{id}/status:
  *   patch:
- *     summary: Update application status
+ *     summary: Update application status (Admin only)
  *     tags: [Applications]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -124,20 +154,22 @@ router.get("/:id", applicationController.getById.bind(applicationController))
  *             $ref: '#/components/schemas/StatusUpdate'
  *     responses:
  *       200:
- *         description: Status updated successfully
+ *         description: Status updated
  *       400:
  *         description: Invalid status
  *       404:
  *         description: Application not found
  */
-router.patch("/:id/status", applicationController.updateStatus.bind(applicationController))
+router.patch("/:id/status", protect, applicationController.updateStatus.bind(applicationController));
 
 /**
  * @swagger
  * /api/applications/{id}:
  *   delete:
- *     summary: Delete an application
+ *     summary: Delete application (Admin only)
  *     tags: [Applications]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -146,10 +178,10 @@ router.patch("/:id/status", applicationController.updateStatus.bind(applicationC
  *           type: string
  *     responses:
  *       200:
- *         description: Application deleted successfully
+ *         description: Application deleted
  *       404:
- *         description: Application not found
+ *         description: Not found
  */
-router.delete("/:id", applicationController.delete.bind(applicationController))
+router.delete("/:id", protect, applicationController.delete.bind(applicationController));
 
-module.exports = router
+module.exports = router;
