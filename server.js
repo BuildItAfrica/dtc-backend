@@ -18,7 +18,15 @@ const PORT = process.env.PORT || 5000
 
 app.use(helmet())
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001", "https://www.dtc.com.ng", "https://admin.dtc.com.ng", "https://dtc-admin-1.onrender.com", "https://dtc.com.ng"],
+  origin: [
+    "http://localhost:3000", 
+    "http://localhost:3001",
+    "https://www.dtc.com.ng",
+    "https://admin.dtc.com.ng",
+    "https://dtc-admin-1.onrender.com",
+    "https://dtc.com.ng",
+    "https://improved-meme-67w5w5j79j5c5rjg-3000.app.github.dev"
+  ],
   credentials: true,
 }))
 app.use(morgan("dev"))

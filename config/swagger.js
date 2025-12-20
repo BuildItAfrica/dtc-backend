@@ -12,6 +12,7 @@ const options = {
     servers: [
       { url: "http://localhost:5000", description: "Local" },
       { url: "https://dtc-backend-1.onrender.com", description: "Production" },
+      { url: "https://crispy-fishstick-v7wrwrx54g63xr9q-5000.app.github.dev", description: "SandBox" },
     ],
     components: {
       securitySchemes: {
