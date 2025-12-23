@@ -145,12 +145,165 @@
 
 
 
+// const Application = require("../models/Application");
+
+// class ApplicationService {
+//   // Create individual application
+//   async createIndividual(data) {
+//     const { email, questionnaire } = data;
+
+//     // Check for duplicate individual application by email
+//     const existing = await Application.findOne({
+//       email: email,
+//       type: "individual",
+//     });
+
+//     if (existing) {
+//       const error = new Error("An individual application with this email already exists");
+//       error.statusCode = 409;
+//       throw error;
+//     }
+
+//     const application = new Application({
+//       type: "individual",
+//       ...data, // spreads all fields: fullName, email, phone, country, participantType,
+//                // focusAreas, experience, motivation, idea, questionnaire, etc.
+//     });
+
+//     return await application.save();
+//   }
+
+//   // Create team application
+//   async createTeam(data) {
+//     const { teamName, leadEmail, questionnaire } = data;
+
+//     // Check for duplicate team by teamName OR leadEmail
+//     const existing = await Application.findOne({
+//       $or: [
+//         { teamName: teamName, type: "team" },
+//         { leadEmail: leadEmail, type: "team" },
+//       ],
+//     });
+
+//     if (existing) {
+//       const error = new Error("A team application with this team name or lead email already exists");
+//       error.statusCode = 409;
+//       throw error;
+//     }
+
+//     const application = new Application({
+//       type: "team",
+//       // For team applications, we store the lead's email as the main email for consistency in queries/filters
+//       email: leadEmail,
+//       ...data, // spreads teamName, teamSize, teamMembers, leadName, leadEmail,
+//                // focusAreas, experience, motivation, idea, questionnaire, etc.
+//     });
+
+//     return await application.save();
+//   }
+
+//   // Get all applications with filters and pagination
+//   async getAll(filters = {}, options = {}) {
+//     const { type, status, focusArea } = filters;
+//     const { page = 1, limit = 20, sort = "-submittedAt" } = options;
+
+//     const query = {};
+//     if (type) query.type = type;
+//     if (status) query.status = status;
+//     if (focusArea) query.focusAreas = focusArea; // works with array field
+
+//     const skip = (Number.parseInt(page) - 1) * Number.parseInt(limit);
+
+//     const [applications, total] = await Promise.all([
+//       Application.find(query)
+//         .sort(sort)
+//         .skip(skip)
+//         .limit(Number.parseInt(limit)),
+//       Application.countDocuments(query),
+//     ]);
+
+//     return {
+//       applications,
+//       pagination: {
+//         page: Number.parseInt(page),
+//         limit: Number.parseInt(limit),
+//         total,
+//         pages: Math.ceil(total / Number.parseInt(limit)),
+//       },
+//     };
+//   }
+
+//   // Get single application by ID
+//   async getById(id) {
+//     const application = await Application.findById(id);
+
+//     if (!application) {
+//       const error = new Error("Application not found");
+//       error.statusCode = 404;
+//       throw error;
+//     }
+
+//     return application;
+//   }
+
+//   // Update application status (and optionally add notes)
+//   async updateStatus(id, status, notes) {
+//     const validStatuses = ["pending", "reviewing", "shortlisted", "accepted", "rejected"];
+
+//     if (!validStatuses.includes(status)) {
+//       const error = new Error(`Invalid status. Must be one of: ${validStatuses.join(", ")}`);
+//       error.statusCode = 400;
+//       throw error;
+//     }
+
+//     const update = { status, updatedAt: new Date() };
+//     if (notes !== undefined && notes !== null) {
+//       update.notes = notes;
+//     }
+
+//     const application = await Application.findByIdAndUpdate(id, update, { new: true });
+
+//     if (!application) {
+//       const error = new Error("Application not found");
+//       error.statusCode = 404;
+//       throw error;
+//     }
+
+//     return application;
+//   }
+
+//   // Delete application
+//   async delete(id) {
+//     const application = await Application.findByIdAndDelete(id);
+
+//     if (!application) {
+//       const error = new Error("Application not found");
+//       error.statusCode = 404;
+//       throw error;
+//     }
+
+//     return application;
+//   }
+// }
+
+// module.exports = new ApplicationService();
+
+
+
+
+
+
+
+
+
+// services/application.service.js
 const Application = require("../models/Application");
+const { sendStatusUpdateEmail } = require("../utils/sendEmail");
 
 class ApplicationService {
   // Create individual application
   async createIndividual(data) {
-    const { email, questionnaire } = data;
+    const { email } = data;
 
     // Check for duplicate individual application by email
     const existing = await Application.findOne({
@@ -166,8 +319,7 @@ class ApplicationService {
 
     const application = new Application({
       type: "individual",
-      ...data, // spreads all fields: fullName, email, phone, country, participantType,
-               // focusAreas, experience, motivation, idea, questionnaire, etc.
+      ...data,
     });
 
     return await application.save();
@@ -175,7 +327,7 @@ class ApplicationService {
 
   // Create team application
   async createTeam(data) {
-    const { teamName, leadEmail, questionnaire } = data;
+    const { teamName, leadEmail } = data;
 
     // Check for duplicate team by teamName OR leadEmail
     const existing = await Application.findOne({
@@ -193,10 +345,8 @@ class ApplicationService {
 
     const application = new Application({
       type: "team",
-      // For team applications, we store the lead's email as the main email for consistency in queries/filters
       email: leadEmail,
-      ...data, // spreads teamName, teamSize, teamMembers, leadName, leadEmail,
-               // focusAreas, experience, motivation, idea, questionnaire, etc.
+      ...data,
     });
 
     return await application.save();
@@ -210,7 +360,7 @@ class ApplicationService {
     const query = {};
     if (type) query.type = type;
     if (status) query.status = status;
-    if (focusArea) query.focusAreas = focusArea; // works with array field
+    if (focusArea) query.focusAreas = focusArea;
 
     const skip = (Number.parseInt(page) - 1) * Number.parseInt(limit);
 
@@ -247,7 +397,7 @@ class ApplicationService {
   }
 
   // Update application status (and optionally add notes)
-  async updateStatus(id, status, notes) {
+async updateStatus(id, status, notes) {
     const validStatuses = ["pending", "reviewing", "shortlisted", "accepted", "rejected"];
 
     if (!validStatuses.includes(status)) {
@@ -256,17 +406,66 @@ class ApplicationService {
       throw error;
     }
 
+    // Fetch current application to know old status
+    const currentApplication = await Application.findById(id);
+    if (!currentApplication) {
+      const error = new Error("Application not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const oldStatus = currentApplication.status;
+    console.log(`\n🔄 STATUS UPDATE REQUEST`);
+    console.log(`   Application ID: ${id}`);
+    console.log(`   Old Status: ${oldStatus}`);
+    console.log(`   New Status: ${status}`);
+    if (notes) console.log(`   Admin Notes: ${notes}`);
+
     const update = { status, updatedAt: new Date() };
-    if (notes !== undefined && notes !== null) {
-      update.notes = notes;
+    if (notes && notes.trim() !== "") {
+      update.notes = notes.trim();
     }
 
     const application = await Application.findByIdAndUpdate(id, update, { new: true });
 
     if (!application) {
-      const error = new Error("Application not found");
+      const error = new Error("Application not found after update");
       error.statusCode = 404;
       throw error;
+    }
+
+    console.log(`✅ STATUS SUCCESSFULLY UPDATED: ${oldStatus} → ${application.status}`);
+
+    // === SEND EMAIL ON ANY IMPORTANT STATUS CHANGE ===
+    const emailStatuses = ["reviewing", "shortlisted", "accepted", "rejected"];
+
+    if (emailStatuses.includes(application.status) && application.status !== oldStatus) {
+      const fullName = application.fullName || application.leadName || "Applicant";
+      const teamName = application.teamName;
+      const recipientEmail = application.email || application.leadEmail;
+
+      if (!recipientEmail) {
+        console.warn(`⚠️  No email address found for this application — skipping email`);
+        return application;
+      }
+
+      console.log(`📧 PREPARING TO SEND EMAIL`);
+      console.log(`   To: ${recipientEmail}`);
+      console.log(`   Name: ${fullName}${teamName ? ` (Team: ${teamName})` : ""}`);
+      console.log(`   Status: ${application.status}`);
+
+      const adminNotes = (application.status === "rejected" && notes) ? notes : null;
+
+      try {
+        await sendStatusUpdateEmail(recipientEmail, fullName, application.status, teamName, adminNotes);
+        console.log(`🎉 EMAIL SENT SUCCESSFULLY for status: ${application.status}`);
+      } catch (emailError) {
+        console.error(`❌ EMAIL FAILED for ${recipientEmail}`);
+        console.error(`   Error:`, emailError.message || emailError);
+        // Do not throw — status update should not fail because of email
+      }
+    } else {
+      console.log(`ℹ️  No email sent — status change from ${oldStatus} → ${application.status} does not trigger notification`);
     }
 
     return application;
