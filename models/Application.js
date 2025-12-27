@@ -66,6 +66,7 @@ const applicationSchema = new mongoose.Schema({
       return this.type === "team"
     },
   },
+
   teamMembers: {
     type: [teamMemberSchema],
     required: function () {
@@ -73,11 +74,12 @@ const applicationSchema = new mongoose.Schema({
     },
     validate: {
       validator: function (members) {
-        return members.length >= 2 && members.length <= 10
+        return members.length >= 1 && members.length <= 10
       },
-      message: "Team must have between 2 and 10 members",
+      message: "Team must have between 1 and 10 members",
     },
   },
+
   leadName: {
     type: String,
     required: function () {
@@ -92,6 +94,13 @@ const applicationSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
   },
+leadPhone: {
+  type: String,
+  required: function () {
+    return this.type === "team"
+  },
+},
+
 
   // === COMMON FIELDS ===
   focusAreas: [
