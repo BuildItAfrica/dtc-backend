@@ -36,7 +36,7 @@ const applicationSchema = new mongoose.Schema({
     max: [100, "Age must be realistic"],
   },
 
-  // === INDIVIDUAL FIELDS - Required ONLY for individual ===
+  // === INDIVIDUAL FIELDS ===
   fullName: {
     type: String,
     required: function () {
@@ -57,7 +57,6 @@ const applicationSchema = new mongoose.Schema({
       return this.type === "individual"
     },
   },
-
   participantType: {
     type: String,
     enum: ["hardtech", "software", "commercial", "catalyst"],
@@ -66,7 +65,7 @@ const applicationSchema = new mongoose.Schema({
     },
   },
 
-  // === TEAM FIELDS - Required ONLY for team ===
+  // === TEAM FIELDS ===
   teamName: {
     type: String,
     required: function () {
@@ -87,7 +86,11 @@ const applicationSchema = new mongoose.Schema({
     },
     validate: {
       validator: function (members) {
-        return members.length >= 1 && members.length <= 10
+        // Skip validation for individual applications
+        if (this.type !== "team") return true;
+
+        // Validate team members count only for team applications
+        return Array.isArray(members) && members.length >= 1 && members.length <= 10;
       },
       message: "Team must have between 1 and 10 members",
     },
@@ -132,7 +135,7 @@ const applicationSchema = new mongoose.Schema({
   notes: String,
 })
 
-// Indexes (unchanged)
+// Indexes
 applicationSchema.index({ email: 1, type: 1 })
 applicationSchema.index({ status: 1 })
 applicationSchema.index({ focusAreas: 1 })
@@ -146,7 +149,6 @@ applicationSchema.pre("save", function (next) {
 })
 
 module.exports = mongoose.model("Application", applicationSchema)
-
 
 
 
