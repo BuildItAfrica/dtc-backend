@@ -4,10 +4,6 @@ const teamMemberSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
   role: { type: String, required: true },
-  // Optional: You can add age/city/country per team member if needed
-  // age: { type: Number, min: 18 },
-  // city: String,
-  // country: String,
 })
 
 const applicationSchema = new mongoose.Schema({
@@ -40,10 +36,27 @@ const applicationSchema = new mongoose.Schema({
     max: [100, "Age must be realistic"],
   },
 
-  // === INDIVIDUAL FIELDS ===
-  fullName: { type: String, required: true },
-  email: { type: String, required: true, lowercase: true, trim: true },
-  phone: { type: String, required: true },
+  // === INDIVIDUAL FIELDS - Required ONLY for individual ===
+  fullName: {
+    type: String,
+    required: function () {
+      return this.type === "individual"
+    },
+  },
+  email: {
+    type: String,
+    required: function () {
+      return this.type === "individual"
+    },
+    lowercase: true,
+    trim: true,
+  },
+  phone: {
+    type: String,
+    required: function () {
+      return this.type === "individual"
+    },
+  },
 
   participantType: {
     type: String,
@@ -53,7 +66,7 @@ const applicationSchema = new mongoose.Schema({
     },
   },
 
-  // === TEAM FIELDS ===
+  // === TEAM FIELDS - Required ONLY for team ===
   teamName: {
     type: String,
     required: function () {
@@ -94,13 +107,12 @@ const applicationSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
   },
-leadPhone: {
-  type: String,
-  required: function () {
-    return this.type === "team"
+  leadPhone: {
+    type: String,
+    required: function () {
+      return this.type === "team"
+    },
   },
-},
-
 
   // === COMMON FIELDS ===
   focusAreas: [
@@ -120,7 +132,7 @@ leadPhone: {
   notes: String,
 })
 
-// Indexes
+// Indexes (unchanged)
 applicationSchema.index({ email: 1, type: 1 })
 applicationSchema.index({ status: 1 })
 applicationSchema.index({ focusAreas: 1 })
@@ -134,9 +146,6 @@ applicationSchema.pre("save", function (next) {
 })
 
 module.exports = mongoose.model("Application", applicationSchema)
-
-
-
 
 
 
