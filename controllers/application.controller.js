@@ -1,24 +1,53 @@
 const applicationService = require("../services/application.service")
 
 class ApplicationController {
-  // POST /api/applications/individual
+  // Helper to validate location & age (only for lead/applicant)
+  validateLeadInfo({ country, city, age }) {
+    if (!country || country.trim() === "") {
+      throw new Error("Country is required")
+    }
+    if (!city || city.trim() === "") {
+      throw new Error("City is required")
+    }
+    if (!age || age < 18) {
+      throw new Error("Age is required and you must be at least 18 years old")
+    }
+  }
+
   async createIndividual(req, res, next) {
     try {
-      const { fullName, email, phone, country, participantType, focusAreas, experience, motivation, idea } = req.body
+      const {
+        fullName,
+        email,
+        phone,
+        country,
+        city,
+        age,
+        participantType,
+        focusAreas,
+        experience,
+        motivation,
+        idea,
+      } = req.body
 
-      // Validation
-      if (!fullName || !email || !participantType || !focusAreas?.length) {
+      // Required fields
+      if (!fullName || !email || !phone || !participantType || !focusAreas?.length) {
         return res.status(400).json({
           success: false,
-          error: "Missing required fields: fullName, email, participantType, focusAreas",
+          error: "Missing required fields: fullName, email, phone, participantType, focusAreas",
         })
       }
+
+      // Enforce country, city, age for individual
+      this.validateLeadInfo({ country, city, age })
 
       const application = await applicationService.createIndividual({
         fullName,
         email,
         phone,
-        country,
+        country: country.trim(),
+        city: city.trim(),
+        age: Number(age),
         participantType,
         focusAreas,
         experience,
@@ -28,7 +57,7 @@ class ApplicationController {
 
       res.status(201).json({
         success: true,
-        message: "Application submitted successfully",
+        message: "Individual application submitted successfully",
         data: { applicationId: application._id },
       })
     } catch (error) {
@@ -36,26 +65,62 @@ class ApplicationController {
     }
   }
 
-  // POST /api/applications/team
   async createTeam(req, res, next) {
     try {
-      const { teamName, teamSize, teamMembers, leadName, leadEmail, focusAreas, experience, motivation, idea } =
-        req.body
-
-      // Validation
-      if (!teamName || !leadEmail || !focusAreas?.length) {
-        return res.status(400).json({
-          success: false,
-          error: "Missing required fields: teamName, leadEmail, focusAreas",
-        })
-      }
-
-      const application = await applicationService.createTeam({
+      const {
         teamName,
         teamSize,
         teamMembers,
         leadName,
         leadEmail,
+        leadPhone,
+        country,
+        city,
+        age,
+        focusAreas,
+        experience,
+        motivation,
+        idea,
+      } = req.body
+
+      // Required team fields
+      if (!teamName || !leadName || !leadEmail || !leadPhone || !focusAreas?.length) {
+        return res.status(400).json({
+          success: false,
+          error: "Missing required fields: teamName, leadName, leadEmail, leadPhone, focusAreas",
+        })
+      }
+
+      if (!teamMembers || !Array.isArray(teamMembers) || teamMembers.length < 1) {
+        return res.status(400).json({
+          success: false,
+          error: "At least one team member is required",
+        })
+      }
+
+      // Validate team members (only name, email, role)
+      for (const member of teamMembers) {
+        if (!member.name || !member.email || !member.role) {
+          return res.status(400).json({
+            success: false,
+            error: "Each team member must have name, email, and role",
+          })
+        }
+      }
+
+      // Enforce country, city, age ONLY for the TEAM LEAD
+      this.validateLeadInfo({ country, city, age })
+
+      const application = await applicationService.createTeam({
+        teamName,
+        teamSize: Number(teamSize),
+        teamMembers,
+        leadName,
+        leadEmail,
+        leadPhone,
+        country: country.trim(),
+        city: city.trim(),
+        age: Number(age),
         focusAreas,
         experience,
         motivation,
@@ -72,7 +137,6 @@ class ApplicationController {
     }
   }
 
-  // GET /api/applications
   async getAll(req, res, next) {
     try {
       const { type, status, focusArea, page, limit, sort } = req.query
@@ -88,7 +152,6 @@ class ApplicationController {
     }
   }
 
-  // GET /api/applications/:id
   async getById(req, res, next) {
     try {
       const application = await applicationService.getById(req.params.id)
@@ -102,7 +165,6 @@ class ApplicationController {
     }
   }
 
-  // PATCH /api/applications/:id/status
   async updateStatus(req, res, next) {
     try {
       const { status, notes } = req.body
@@ -118,7 +180,6 @@ class ApplicationController {
     }
   }
 
-  // DELETE /api/applications/:id
   async delete(req, res, next) {
     try {
       await applicationService.delete(req.params.id)
