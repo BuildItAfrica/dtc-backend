@@ -36,6 +36,28 @@ const applicationSchema = new mongoose.Schema({
     max: [100, "Age must be realistic"],
   },
 
+  // === NEW OPTIONAL PERSONAL FIELDS (for individual or team lead) ===
+  sex: {
+    type: String,
+    enum: ["Male", "Female", "Other", "Prefer not to say"],
+    default: null,
+  },
+
+  education: {
+    type: String,
+    enum: [
+      "High School",
+      "Some College",
+      "Associate Degree",
+      "Bachelor's Degree",
+      "Master's Degree",
+      "PhD or Doctorate",
+      "Vocational/Technical Training",
+      "Prefer not to say",
+    ],
+    default: null,
+  },
+
   // === INDIVIDUAL FIELDS ===
   fullName: {
     type: String,
@@ -86,10 +108,7 @@ const applicationSchema = new mongoose.Schema({
     },
     validate: {
       validator: function (members) {
-        // Skip validation for individual applications
         if (this.type !== "team") return true;
-
-        // Validate team members count only for team applications
         return Array.isArray(members) && members.length >= 1 && members.length <= 10;
       },
       message: "Team must have between 1 and 10 members",
@@ -149,6 +168,173 @@ applicationSchema.pre("save", function (next) {
 })
 
 module.exports = mongoose.model("Application", applicationSchema)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const mongoose = require("mongoose")
+
+// const teamMemberSchema = new mongoose.Schema({
+//   name: { type: String, required: true },
+//   email: { type: String, required: true },
+//   role: { type: String, required: true },
+// })
+
+// const applicationSchema = new mongoose.Schema({
+//   type: {
+//     type: String,
+//     enum: ["individual", "team"],
+//     required: true,
+//   },
+//   status: {
+//     type: String,
+//     enum: ["pending", "reviewing", "shortlisted", "accepted", "rejected"],
+//     default: "pending",
+//   },
+
+//   // === COMMON REQUIRED FIELDS ===
+//   country: {
+//     type: String,
+//     required: true,
+//     trim: true,
+//   },
+//   city: {
+//     type: String,
+//     required: true,
+//     trim: true,
+//   },
+//   age: {
+//     type: Number,
+//     required: true,
+//     min: [18, "You must be at least 18 years old"],
+//     max: [100, "Age must be realistic"],
+//   },
+
+//   // === INDIVIDUAL FIELDS ===
+//   fullName: {
+//     type: String,
+//     required: function () {
+//       return this.type === "individual"
+//     },
+//   },
+//   email: {
+//     type: String,
+//     required: function () {
+//       return this.type === "individual"
+//     },
+//     lowercase: true,
+//     trim: true,
+//   },
+//   phone: {
+//     type: String,
+//     required: function () {
+//       return this.type === "individual"
+//     },
+//   },
+//   participantType: {
+//     type: String,
+//     enum: ["hardtech", "software", "commercial", "catalyst"],
+//     required: function () {
+//       return this.type === "individual"
+//     },
+//   },
+
+//   // === TEAM FIELDS ===
+//   teamName: {
+//     type: String,
+//     required: function () {
+//       return this.type === "team"
+//     },
+//   },
+//   teamSize: {
+//     type: Number,
+//     required: function () {
+//       return this.type === "team"
+//     },
+//   },
+
+//   teamMembers: {
+//     type: [teamMemberSchema],
+//     required: function () {
+//       return this.type === "team"
+//     },
+//     validate: {
+//       validator: function (members) {
+//         // Skip validation for individual applications
+//         if (this.type !== "team") return true;
+
+//         // Validate team members count only for team applications
+//         return Array.isArray(members) && members.length >= 1 && members.length <= 10;
+//       },
+//       message: "Team must have between 1 and 10 members",
+//     },
+//   },
+
+//   leadName: {
+//     type: String,
+//     required: function () {
+//       return this.type === "team"
+//     },
+//   },
+//   leadEmail: {
+//     type: String,
+//     required: function () {
+//       return this.type === "team"
+//     },
+//     lowercase: true,
+//     trim: true,
+//   },
+//   leadPhone: {
+//     type: String,
+//     required: function () {
+//       return this.type === "team"
+//     },
+//   },
+
+//   // === COMMON FIELDS ===
+//   focusAreas: [
+//     {
+//       type: String,
+//       enum: ["healthcare", "energy", "agriculture"],
+//       required: true,
+//     },
+//   ],
+//   experience: { type: String, required: true },
+//   motivation: { type: String, required: true },
+//   idea: { type: String },
+
+//   // === METADATA ===
+//   submittedAt: { type: Date, default: Date.now },
+//   updatedAt: { type: Date, default: Date.now },
+//   notes: String,
+// })
+
+// // Indexes
+// applicationSchema.index({ email: 1, type: 1 })
+// applicationSchema.index({ status: 1 })
+// applicationSchema.index({ focusAreas: 1 })
+// applicationSchema.index({ submittedAt: -1 })
+// applicationSchema.index({ country: 1, city: 1 })
+
+// // Update timestamp on save
+// applicationSchema.pre("save", function (next) {
+//   this.updatedAt = new Date()
+//   next()
+// })
+
+// module.exports = mongoose.model("Application", applicationSchema)
 
 
 
