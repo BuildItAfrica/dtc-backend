@@ -299,6 +299,7 @@
 // services/application.service.js
 const Application = require("../models/Application");
 const { sendStatusUpdateEmail } = require("../utils/sendEmail");
+const { sendBulkCustomEmail } = require("../utils/sendBulkCustomEmail");
 
 class ApplicationService {
   // Create individual application
@@ -483,6 +484,53 @@ async updateStatus(id, status, notes) {
 
     return application;
   }
+
+
+  async sendBulkCustomEmail(applicationIds, subject, message) {
+    if (!applicationIds || !Array.isArray(applicationIds) || applicationIds.length === 0) {
+      const error = new Error("applicationIds array is required");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (!subject || subject.trim() === "") {
+      const error = new Error("Email subject is required");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (!message || message.trim() === "") {
+      const error = new Error("Email message is required");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Fetch valid applications
+    const applications = [];
+    for (const id of applicationIds) {
+      try {
+        const app = await this.getById(id);
+        if (app) applications.push(app);
+      } catch (err) {
+        // Skip invalid IDs
+        console.warn(`Invalid application ID skipped: ${id}`);
+      }
+    }
+
+    if (applications.length === 0) {
+      const error = new Error("No valid applications found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Send emails
+    const result = await sendBulkCustomEmail(applications, subject.trim(), message);
+
+    return result;
+  }
+
+
+
 }
 
 module.exports = new ApplicationService();

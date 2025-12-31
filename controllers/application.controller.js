@@ -1,3 +1,4 @@
+// controllers/application.controller.js
 const applicationService = require("../services/application.service")
 
 class ApplicationController {
@@ -242,6 +243,24 @@ class ApplicationController {
       })
     } catch (error) {
       next(error)
+    }
+  }
+
+
+
+  async sendBulkCustomEmail(req, res, next) {
+    try {
+      const { applicationIds, subject, message } = req.body;
+
+      const result = await applicationService.sendBulkCustomEmail(applicationIds, subject, message);
+
+      res.json({
+        success: true,
+        message: "Bulk email process completed",
+        data: result,
+      });
+    } catch (error) {
+      next(error);
     }
   }
 }
