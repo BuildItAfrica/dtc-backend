@@ -3,6 +3,8 @@ const Admin = require("../models/Admin");
 
 const signToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
+
+
 class AuthController {
   async login(req, res) {
     const { username, password } = req.body;
