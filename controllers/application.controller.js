@@ -263,6 +263,72 @@ class ApplicationController {
       next(error);
     }
   }
+
+
+
+  // async aiQuery(req, res, next)
+  // {
+  //   try{
+  //     const { query }  = req.body
+  //     if(!query || typeof query !== "string" || query.trim().length === 0)
+  //     {
+  //       return res.status(400).json({
+  //         success: false,
+  //         error: "A valid search query is required",
+  //       })
+  //     }
+
+  //     const result = await applicationService.aiQuery(query);
+
+  //     res.json({
+  //       success: true,
+  //       message: result.message,
+  //       applicants:result.applicants || [],
+  //     })
+  //   } catch(error){
+  //     console.error("AI Controller Error:", error);
+  //     next(error);
+  //   }
+  // }
+
+
+  // async aiQuery(req, res, next) {
+  //   try {
+  //     const { query } = req.body;
+
+  //     if (!query || typeof query !== "string" || query.trim().length === 0) {
+  //       return res.status(400).json({
+  //         success: false,
+  //         error: "A valid search query is required",
+  //       });
+  //     }
+
+  //     const result = await applicationService.aiQuery(query);
+
+  //     res.json({
+  //       success: true,
+  //       message: result.message,
+  //       applicants: result.applicants || [],
+  //     });
+  //   } catch (error) {
+  //     console.error("AI Query Controller Error:", error);
+  //     next(error);
+  //   }
+  // }
+
+
+
+  async aiQuery(req, res, next) {
+    try {
+      const result = await applicationService.aiQuery(req.body);
+      res.json({ success: true, ...result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+
+
 }
 
 module.exports = new ApplicationController()

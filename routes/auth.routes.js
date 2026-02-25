@@ -32,7 +32,7 @@ const authController = require("../controllers/auth.controller");
  *               password:
  *                 type: string
  *                 format: password
- *                 example: YourStrongPass123!
+ *                 example: Dtc2026Admin@123
  *     responses:
  *       200:
  *         description: Login successful

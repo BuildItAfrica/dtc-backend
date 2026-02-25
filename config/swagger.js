@@ -20,7 +20,7 @@ const options = {
           type: "http",
           scheme: "bearer",
           bearerFormat: "JWT",
-          description: "Enter JWT token from /api/auth/login",
+          description: "Enter JWT token from /api/auth/login (username: admin, password: Dtc2026Admin@123)",
         },
       },
       schemas: {
@@ -49,6 +49,11 @@ const options = {
         },
       },
     },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
   apis: ["./routes/*.js"],
 };

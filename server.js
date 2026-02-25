@@ -13,6 +13,7 @@ const { errorHandler, notFoundHandler } = require("./middleware/error.middleware
 const applicationRoutes = require("./routes/applications");
 const authRoutes = require("./routes/auth.routes");
 const statsRoutes = require("./routes/stats");
+const votingRoutes = require("./routes/voting.routes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -76,6 +77,7 @@ app.use(
 app.use("/api/applications", applicationRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/votes", votingRoutes);
 
 /**
  * ====================================

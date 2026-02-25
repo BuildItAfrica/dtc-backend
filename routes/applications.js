@@ -774,4 +774,51 @@ router.delete("/:id", protect, applicationController.delete.bind(applicationCont
  */
 router.post("/bulk-email", protect, applicationController.sendBulkCustomEmail.bind(applicationController));
 
+
+
+
+/**
+ * @swagger
+ * /api/applications/ai-query:
+ *   post:
+ *     summary: AI-powered applicant search for judges
+ *     description: Judges can ask natural language questions about applicants. AI analyzes all applications and returns best matches.
+ *     tags: [Applications]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - query
+ *             properties:
+ *               query:
+ *                 type: string
+ *                 example: "Top healthcare applicants with strong AI background and impact focus"
+ *     responses:
+ *       200:
+ *         description: AI analysis results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 applicants:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Application'
+ *       400:
+ *         description: Invalid query
+ *       500:
+ *         description: AI service error
+ */
+router.post("/ai-query", protect, applicationController.aiQuery.bind(applicationController));
+
 module.exports = router;
