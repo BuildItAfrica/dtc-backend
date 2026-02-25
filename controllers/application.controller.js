@@ -318,14 +318,7 @@ class ApplicationController {
 
 
 
-  async aiQuery(req, res, next) {
-    try {
-      const result = await applicationService.aiQuery(req.body);
-      res.json({ success: true, ...result });
-    } catch (err) {
-      next(err);
-    }
-  }
+
 
 
 

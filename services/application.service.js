@@ -304,13 +304,6 @@ const { WEIGHTS } = require("../config/weights");
 const { sendStatusUpdateEmail } = require("../utils/sendEmail");
 const { sendBulkCustomEmail } = require("../utils/sendBulkCustomEmail");
 
-const OpenAI = require("openai");
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-
 class ApplicationService {
 
     constructor() {
@@ -550,80 +543,6 @@ async updateStatus(id, status, notes) {
   }
 
 
-
-  async loadCachedScores() {
-    const now = Date.now();
-    if (!this.cachedScores || now - this.lastCacheTime > this.CACHE_TTL) {
-      const scores = await ApplicationScore.find({}).populate("applicationId");
-      this.cachedScores = scores.map(s => ({
-        app: s.applicationId,
-        scores: s.scores,
-      }));
-      this.lastCacheTime = now;
-    }
-    return this.cachedScores;
-  }
-
-
-    // AI query
-async aiQuery({ query }) {
-  if (!query || !query.trim()) {
-    throw { status: 400, message: "Query cannot be empty" };
-  }
-
-  const scores = await this.loadCachedScores();
-
-  const prompt = `
-You are an assistant for DTC 2026 judges.
-Extract these from the query:
-- focusArea: healthcare, energy, agriculture (if mentioned)
-- minScore: minimum total score (0-100) if mentioned
-- limit: number of applicants to return
-
-Query: "${query}"
-
-Respond ONLY in JSON:
-{"focusArea": null, "limit": 5, "minScore": 0}
-`;
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [{ role: "user", content: prompt }],
-    temperature: 0,
-  });
-
-  let parsed;
-  try {
-    parsed = JSON.parse(response.choices[0].message.content);
-  } catch {
-    parsed = { focusArea: null, limit: 5, minScore: 0 };
-  }
-
-  const { focusArea, limit, minScore } = parsed;
-
-  let filtered = scores;
-
-  if (focusArea) {
-    filtered = filtered.filter(f =>
-      (f.app.focusAreas || []).includes(focusArea)
-    );
-  }
-
-  const results = filtered
-    .map(f => ({
-      app: f.app,
-      totalScore: computeTotal(f.scores, WEIGHTS.default),
-    }))
-    .filter(f => f.totalScore >= minScore)
-    .sort((a, b) => b.totalScore - a.totalScore)
-    .slice(0, limit)
-    .map(f => f.app);
-
-  return {
-    message: `Top ${results.length} applicants matching your criteria.`,
-    applicants: results,
-  };
-}
 
 
 
